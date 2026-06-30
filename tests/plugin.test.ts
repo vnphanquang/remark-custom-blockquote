@@ -51,24 +51,24 @@ test('regular blockquote is not affected', async () => {
 });
 
 test('skip if no mappings provided', async () => {
-	const output = await processWithPlugin(markdown`> [!CUSTOM] This is an custom blockquote`);
+	const output = await processWithPlugin(markdown`> [!CUSTOM] This is a regular blockquote`);
 	matchStringIgnoringWhitespace(
 		output,
 		html`
 			<blockquote>
-				<p>[!CUSTOM] This is an custom blockquote</p>
+				<p>[!CUSTOM] This is a regular blockquote</p>
 			</blockquote>
 		`,
 	);
 });
 
 test('skip if no options provided', async () => {
-	const output = await processWithPlugin(markdown`> [!CUSTOM] This is an custom blockquote`);
+	const output = await processWithPlugin(markdown`> [!CUSTOM] This is a regular blockquote`);
 	matchStringIgnoringWhitespace(
 		output,
 		html`
 			<blockquote>
-				<p>[!CUSTOM] This is an custom blockquote</p>
+				<p>[!CUSTOM] This is a regular blockquote</p>
 			</blockquote>
 		`,
 	);
@@ -115,7 +115,7 @@ test('skip if missing closing bracket', async () => {
 	const output = await processWithPlugin(
 		markdown`
 			> [!CUSTOM
-			> This is an custom blockquote
+			> This is a regular blockquote
 		`,
 		{
 			mappings,
@@ -126,14 +126,32 @@ test('skip if missing closing bracket', async () => {
 		output,
 		html`
 			<blockquote>
-				<p>[!CUSTOM This is an custom blockquote</p>
+				<p>[!CUSTOM This is a regular blockquote</p>
 			</blockquote>
 		`,
 	);
 });
 
+test('skip if no newline between marker and content', async () => {
+	const output = await processWithPlugin(
+		markdown`
+			> [!CUSTOM] This is a regular blockquote
+		`,
+		{ mappings },
+	);
+
+	matchStringIgnoringWhitespace(
+		output,
+		html`
+			<blockquote>
+				<p>[!CUSTOM] This is a regular blockquote</p>
+			</blockquote>
+	`,
+	);
+});
+
 describe('custom blockquote is transformed', () => {
-	test('no space between', async () => {
+	test('no extra newline between', async () => {
 		const output = await processWithPlugin(
 			markdown`
 				> [!CUSTOM]
@@ -160,7 +178,7 @@ describe('custom blockquote is transformed', () => {
 		`);
 	});
 
-	test('newline between marker and content', async () => {
+	test('extra newline between marker and content', async () => {
 		const output = await processWithPlugin(
 			markdown`
 				> [!CUSTOM]
@@ -202,6 +220,7 @@ describe('custom blockquote is transformed', () => {
 	test('newline before marker', async () => {
 		const output = await processWithPlugin(
 			markdown`
+				>
 				> [!CUSTOM]
 				> This is an custom blockquote
 			`,
