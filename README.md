@@ -4,13 +4,51 @@ turn a blockquote with special marker into a customisable element, similar but n
 
 [![MIT][license.badge]][license] [![npm.badge]][npm] [![codecov][codecov.badge]][codecov]
 
+## Installation
+
+```bash
+pnpm add -D remark-transform-blockquote # or via npm, yarn, ...
+```
+
 ## Usage
+
+This code...
 
 ```typescript
 import rehypeStringify from 'rehype-stringify';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
-import remarkCustom from 'remark-transform-blockquote';
+import remarkTransformBlockquote from 'remark-transform-blockquote';
+
+const output = await unified()
+	.use(remarkParse)
+	.use(remarkTransformBlockquote, {
+		mappings: [
+			{
+				marker: '!CUSTOM',
+				tag: 'section',
+				attributes: { class: 'custom-block' },
+			},
+		],
+	})
+	.use(remarkRehype)
+	.use(rehypeStringify)
+	.process('...');
+```
+
+will transform the following input...
+
+```markdown
+> [!CUSTOM]
+> This will be a custom block.
+```
+
+...to this output:
+
+```html
+<section class="custom-block">
+	<p>This will be a custom block.</p>
+</section>
 ```
 
 ## Related Projects / Prior Arts
