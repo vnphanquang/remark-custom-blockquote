@@ -3,6 +3,7 @@ import rehypeStringify from 'rehype-stringify';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import { unified } from 'unified';
+import { visit } from 'unist-util-visit';
 import { describe, expect, test } from 'vitest';
 
 import { remarkTransformBlockquote } from '../src/plugin';
@@ -133,12 +134,9 @@ test('skip if missing closing bracket', async () => {
 });
 
 test('skip if no newline between marker and content', async () => {
-	const output = await processWithPlugin(
-		markdown`
-			> [!CUSTOM] This is a regular blockquote
-		`,
-		{ mappings },
-	);
+	const output = await processWithPlugin(markdown` > [!CUSTOM] This is a regular blockquote `, {
+		mappings,
+	});
 
 	matchStringIgnoringWhitespace(
 		output,
@@ -220,7 +218,6 @@ describe('custom blockquote is transformed', () => {
 	test('newline before marker', async () => {
 		const output = await processWithPlugin(
 			markdown`
-				>
 				> [!CUSTOM]
 				> This is an custom blockquote
 			`,
@@ -408,4 +405,41 @@ describe('custom blockquote is transformed', () => {
 		`,
 		);
 	});
+});
+
+test('properties set by other plugin should be preserved', async () => {
+	const input = `> [!CUSTOM]`;
+	const output = await unified()
+		.use(remarkParse)
+		.use(() => (tree) => {
+			visit(tree, { type: 'blockquote' }, (node) => {
+				node.data ??= {};
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				(node.data as any).hProperties = { 'data-test-before': '.' };
+			});
+		})
+		.use(remarkTransformBlockquote, {
+			mappings: [
+				{
+					marker: '!CUSTOM',
+					attributes: { class: 'custom-block' },
+				},
+			],
+		})
+		.use(() => (tree) => {
+			visit(tree, { type: 'blockquote' }, (node) => {
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				(node.data as any).hProperties['data-test-after'] = '.';
+			});
+		})
+		.use(remarkRehype)
+		.use(rehypeStringify)
+		.process(input);
+
+	matchStringIgnoringWhitespace(
+		String(output),
+		html`
+			<div data-test-before="." class="custom-block" data-test-after="."></div>
+		`,
+	);
 });
