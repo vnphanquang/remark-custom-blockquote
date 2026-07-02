@@ -42,6 +42,9 @@
 		"types",
 		"README.md"
 	],
+	"publishConfig": {
+		"access": "public"
+	},
 	"scripts": {
 		"lint:es": "eslint .",
 		"lint:style": "stylelint \"**/*.css\"",
