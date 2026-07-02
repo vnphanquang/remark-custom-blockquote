@@ -53,7 +53,7 @@ will transform the following input...
 
 ## Presets
 
-The package expose some presets for common use cases.
+The package allows some presets for common use cases.
 
 1. Specify preset:
 
@@ -70,6 +70,10 @@ The package expose some presets for common use cases.
    ```
 
 Where `<preset>` is listed in the following sections.
+
+> [!NOTE]
+> You may provide additional `mappings` that will take precedence over the preset's mappings.
+> Be aware that only the first mapping that matches is applied.
 
 ### Preset: `github`
 
@@ -135,7 +139,7 @@ To provide customisation, set the CSS variables where appropriate, e.g.
 SVG icons are also available should you need to reference / use them. For example:
 
 ```javascript
-// assuming vite or some bundler that supports importing SVG files.
+// assuming vite or some bundler that supports importing SVG.
 import svg from 'remark-transform-blockquote/presets/github/icons/note.svg'; // replace with <variant>.svg as needed
 ```
 
@@ -173,11 +177,11 @@ Where `<VARIANT>` is one of `{INFO, SUCCESS, WARNING}`.
 
 Modifier variables (changed per variant):
 
-| CSS Variable                  | Description                   | Fallback | Set to                                |
-| ----------------------------- | ----------------------------- | -------- | ------------------------------------- |
-| `--sidenote-icon`             | an 32x32 url-encoded SVG      |          | `--sidenote-<variant>-icon`           |
-| `--sidenote-decoration-color` | color for icon & left border  |          | `sidenote-<variant>-decoration-color` |
-| `--sidenote-background-color` | background color of container |          | `sidenote-<variant>-background-color` |
+| CSS Variable                  | Description                   | Set to                                |
+| ----------------------------- | ----------------------------- | ------------------------------------- |
+| `--sidenote-icon`             | an 32x32 url-encoded SVG      | `--sidenote-<variant>-icon`           |
+| `--sidenote-decoration-color` | color for icon & left border  | `sidenote-<variant>-decoration-color` |
+| `--sidenote-background-color` | background color of container | `sidenote-<variant>-background-color` |
 
 > [!NOTE]
 > The color variables use CSS new [light-dark] function for minimal light/dark mode support.
@@ -207,15 +211,36 @@ See [presets/comeau.css](https://github.com/vnphanquang/remark-transform-blockqu
 
 > [!NOTE]
 > For simplicity, this preset does not include some enhancements that Josh has for his component,
-> for example `:selection` color or contextual color for codeblocks within.
+> for example `:selection` color or contextual colors for codeblocks within.
 
 #### Icons
 
 SVG icons are also available should you need to reference / use them. For example:
 
 ```javascript
-// assuming vite or some bundler that supports importing SVG files.
+// assuming vite or some bundler that supports importing SVG.
 import svg from 'remark-transform-blockquote/presets/comeau/icons/info.svg'; // replace with <variant>.svg as needed
+```
+
+## Complex Transformation
+
+Should you need to do more than just change tag name / attributes, you can specify a `post` hook
+
+```typescript
+unified.use(remarkTransformBlockquote, {
+	mappings: [
+		{
+			marker: '!CUSTOM',
+			tag: 'section',
+			attributes: { class: 'custom-block' },
+			hooks: {
+				post: (node, index, parent, tree) => {
+					// do something with node, e.g. adding child, changing content, etc.
+				},
+			},
+		},
+	],
+});
 ```
 
 ## Related Projects / Prior Arts
@@ -240,6 +265,7 @@ import svg from 'remark-transform-blockquote/presets/comeau/icons/info.svg'; // 
 [padding-block]: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/padding-block
 [margin-block-start]: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/margin-block-start
 [margin-block-end]: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/margin-block-end
+[margin-inlin]: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/margin-inlin
 [border-inline-start-width]: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/border-inline-start-width
 [border-inline-start-color]: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/border-inline-start-color
 [light-dark]: https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/color_value/light-dark
