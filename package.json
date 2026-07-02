@@ -50,7 +50,7 @@
 		"dts": "dts-buddy --write && publint",
 		"test": "vitest --coverage --browser.headless",
 		"prepublishOnly": "pnpm dts",
-		"ci:test": "vitest run --coverage --browser.headless",
+		"ci:test": "vitest run unit --coverage",
 		"ci:version": "changeset version",
 		"ci:publish": "changeset tag && pnpm publish -r --no-git-checks --access public"
 	},
