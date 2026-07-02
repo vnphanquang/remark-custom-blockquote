@@ -1,5 +1,12 @@
 import { CONTINUE, SKIP, visit } from 'unist-util-visit';
 
+import { PRESET_MAPPINGS_COMEAU, PRESET_MAPPINGS_GITHUB } from './presets/index.js';
+
+const PRESET_TO_MAPPINGS = /** @type {const} */ ({
+	github: PRESET_MAPPINGS_GITHUB,
+	comeau: PRESET_MAPPINGS_COMEAU,
+});
+
 /**
  * Remark plugin that turns a blockquote with special marker into a customisable element,
  * similar to {@link https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#alerts|Github Markdown Alerts}
@@ -7,7 +14,17 @@ import { CONTINUE, SKIP, visit } from 'unist-util-visit';
  * @returns {import('unified').Transformer<import('mdast').Root, import('mdast').Root>}
  */
 export function remarkTransformBlockquote(options) {
-	const { mappings = [] } = options ?? {};
+	const { preset } = options ?? {};
+	let mappings = options?.mappings ?? [];
+
+	if (preset) {
+		if (!Object.keys(PRESET_TO_MAPPINGS).includes(preset)) {
+			throw new Error(
+				`Invalid preset "${preset}". Valid presets are: ${Object.keys(PRESET_TO_MAPPINGS).join(', ')}`,
+			);
+		}
+		mappings = [...mappings, ...PRESET_TO_MAPPINGS[preset]];
+	}
 
 	/**
 	 * @param {import('mdast').Root} tree - The markdown AST tree

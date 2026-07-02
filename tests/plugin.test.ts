@@ -1,26 +1,14 @@
-import dedent from 'dedent';
 import rehypeStringify from 'rehype-stringify';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import { unified } from 'unified';
 import { visit } from 'unist-util-visit';
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { remarkTransformBlockquote } from '../src/plugin';
-import type {
-	RemarkTransformBlockquoteMapping,
-	RemarkTransformBlockquoteOptions,
-} from '../src/types.public';
+import type { RemarkTransformBlockquoteMapping } from '../src/types.public';
 
-const markdown = dedent;
-const html = dedent;
-
-function matchStringIgnoringWhitespace(actual: string, expected: string) {
-	// collapse newline
-	const normalize = (str: string) =>
-		str.trim().replace(/\r?\n/g, ' ').replace(/\s+/g, ' ').replace(/>\s+</g, '><'); // remove whitespace between tags
-	expect(normalize(actual)).toBe(normalize(expected));
-}
+import { html, markdown, matchStringIgnoringWhitespace, processWithPlugin } from './utils';
 
 const mappings: RemarkTransformBlockquoteMapping[] = [
 	{
@@ -28,16 +16,6 @@ const mappings: RemarkTransformBlockquoteMapping[] = [
 		attributes: { class: 'custom-block' },
 	},
 ];
-
-async function processWithPlugin(input: string, options?: RemarkTransformBlockquoteOptions) {
-	const output = await unified()
-		.use(remarkParse)
-		.use(remarkTransformBlockquote, options)
-		.use(remarkRehype)
-		.use(rehypeStringify)
-		.process(input);
-	return String(output);
-}
 
 test('regular blockquote is not affected', async () => {
 	const output = await processWithPlugin(markdown`> This is a regular blockquote.`, { mappings });
@@ -442,4 +420,42 @@ test('properties set by other plugin should be preserved', async () => {
 			<div data-test-before="." class="custom-block" data-test-after="."></div>
 		`,
 	);
+});
+
+describe('should preserve placeholder/variable pattern', () => {
+	test('double braces {{}}', async () => {
+		const input = markdown`
+			> [!CUSTOM]
+			> This is a custom blockquote with a placeholder variable: {{variable_name}}
+		`;
+
+		const output = await processWithPlugin(input, { mappings });
+
+		matchStringIgnoringWhitespace(
+			output,
+			html`
+				<div class="custom-block">
+					<p>This is a custom blockquote with a placeholder variable: {{variable_name}}</p>
+				</div>
+			`,
+		);
+	});
+
+	test('singled braces {}', async () => {
+		const input = markdown`
+			> [!CUSTOM]
+			> This is a custom blockquote with a placeholder variable: {variable_name}
+		`;
+
+		const output = await processWithPlugin(input, { mappings });
+
+		matchStringIgnoringWhitespace(
+			output,
+			html`
+				<div class="custom-block">
+					<p>This is a custom blockquote with a placeholder variable: {variable_name}</p>
+				</div>
+			`,
+		);
+	});
 });
